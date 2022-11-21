@@ -38,14 +38,20 @@ exports.editTodo = async (req, res, next) => {
   try {
     const { title, completed } = req.body;
     const { id } = req.params;
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ message: 'Title is required.' });
+    }
+
+    if (typeof completed !== 'boolean') {
+      return res.status(400).json({ message: 'Completed is required.' });
+    }
 
     const allTodo = await readTodos();
-    const todo = allTodo.map((item) =>
-      item.id === id ? { title, completed, id } : item
-    );
-    await writeTodos(todo);
+    const update = { title, completed, id };
+    const updatedTodo = allTodo.map((item) => (item.id === id ? update : item));
+    await writeTodos(updatedTodo);
 
-    res.status(200).json({ todo });
+    res.status(200).json({ message: 'success update' });
   } catch (err) {
     next(err);
   }
@@ -54,9 +60,12 @@ exports.editTodo = async (req, res, next) => {
 exports.deleteTodo = async (req, res, next) => {
   try {
     const { id } = req.params;
+
     const allTodo = await readTodos();
+
     const todo = allTodo.filter((item) => item.id !== id);
-    res.status(200).json({ todo });
+    await writeTodos(todo);
+    res.status(200).json({ message: 'success delete' });
   } catch (err) {
     next(err);
   }
